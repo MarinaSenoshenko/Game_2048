@@ -1,7 +1,8 @@
-import java.awt.*
+import java.awt.GridLayout
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import java.awt.image.BufferedImage
+import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.*
 import javax.swing.JOptionPane.INFORMATION_MESSAGE
@@ -19,6 +20,7 @@ class MainFrame : JFrame() {
         defaultCloseOperation = EXIT_ON_CLOSE
         setSize(600, 600)
         isResizable = false
+        iconImage = ImageIcon(Objects.requireNonNull(MainFrame::class.java.getResource("2048.png"))).image
 
         val panel = JPanel(GridLayout(4, 4, 5, 5))
         add(panel)
@@ -74,8 +76,7 @@ class MainFrame : JFrame() {
         }
     }
 
-    // TODO поменять логику сдвига
-    private fun changeImages(labels: Array<JLabel>, i: Int, offset: Int) {
+    private fun changeImage(labels: Array<JLabel>, i: Int, offset: Int) {
         if (labels[i].text == labels[i + offset].text && labels[i].text != 0.toString()) {
             val cellNumber = labels[i + offset].text.toInt() + 1
             labels[i + offset].text = cellNumber.toString()
@@ -91,7 +92,14 @@ class MainFrame : JFrame() {
         }
     }
 
-    // TODO исправить условие поражения
+    private fun changeAllImages(labels: Array<JLabel>, range: IntRange, offset: Int, filter: (Int) -> Boolean = { true }) {
+        for (i in range) {
+            if (filter(i)) {
+                changeImage(labels, i, offset)
+            }
+        }
+    }
+
     private fun checkGameOver(labels: Array<JLabel>) : Boolean {
         for (i in 0 .. 15) {
             if (labels[i].text == 0.toString()) {
@@ -119,30 +127,10 @@ class MainFrame : JFrame() {
 
     private fun turnImages(labels: Array<JLabel>, direction: Direction) {
         when (direction) {
-            Direction.UP -> {
-                for (i in 4 .. 15) {
-                    changeImages(labels, i, -4)
-                }
-            }
-            Direction.DOWN -> {
-                for (i in 0..11) {
-                    changeImages(labels, i, 4)
-                }
-            }
-            Direction.LEFT -> {
-                for (i in 1 .. 15) {
-                    if (i % 4 != 0) {
-                        changeImages(labels, i, -1)
-                    }
-                }
-            }
-            Direction.RIGHT -> {
-                for (i in 0 .. 14) {
-                    if ((i + 1) % 4 != 0) {
-                        changeImages(labels, i, 1)
-                    }
-                }
-            }
+            Direction.UP -> changeAllImages(labels, 4..15, -4)
+            Direction.DOWN -> changeAllImages(labels, 0..11, 4)
+            Direction.LEFT -> changeAllImages(labels, 1..15, -1) { it % 4 != 0 }
+            Direction.RIGHT -> changeAllImages(labels, 0..14, 1) { (it + 1) % 4 != 0 }
         }
         placeNewImage(labels)
     }
@@ -151,4 +139,3 @@ class MainFrame : JFrame() {
 fun main() {
     MainFrame()
 }
-
